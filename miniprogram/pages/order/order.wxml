@@ -1,0 +1,67 @@
+<!--pages/order/order.wxml-->
+<view class="container">
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view 
+      class="filter-item {{statusFilter === 'all' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="all"
+    >全部</view>
+    <view 
+      class="filter-item {{statusFilter === 'pending' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="pending"
+    >待确认</view>
+    <view 
+      class="filter-item {{statusFilter === 'preparing' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="preparing"
+    >制作中</view>
+    <view 
+      class="filter-item {{statusFilter === 'completed' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="completed"
+    >已完成</view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="order-list">
+    <view 
+      class="order-card" 
+      wx:for="{{filteredOrders}}" 
+      wx:key="id"
+      bindtap="viewOrderDetail"
+      data-order="{{item}}"
+    >
+      <view class="order-header">
+        <view class="order-id">订单号：{{item.id}}</view>
+        <view class="order-status status-{{item.status}}">{{statusMap[item.status]}}</view>
+      </view>
+      
+      <!-- 进度条 -->
+      <view class="order-progress" wx:if="{{item.status !== 'cancelled'}}">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{item.progressPercent}}%"></view>
+        </view>
+        <view class="progress-text">{{item.progressText}} ({{item.progressStep}}/{{item.progressTotal}})</view>
+      </view>
+      
+      <view class="order-items">
+        <view class="order-item" wx:for="{{item.items}}" wx:key="dish_id" wx:for-item="dish">
+          <text>{{dish.dish_name}} x{{dish.quantity}}</text>
+        </view>
+      </view>
+
+      <view class="order-footer">
+        <view class="order-time">{{formatTime(item.created_at)}}</view>
+        <view class="order-total">¥{{item.total_amount}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{filteredOrders.length === 0}}">
+    <view class="empty-state-icon">📋</view>
+    <view class="empty-state-text">暂无订单</view>
+  </view>
+</view>

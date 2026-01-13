@@ -1,0 +1,64 @@
+<!--pages/index/index.wxml-->
+<wxs module="utils">
+  var toFixed = function(num, digits) {
+    return Number(num).toFixed(digits || 2);
+  };
+  module.exports.toFixed = toFixed;
+</wxs>
+
+<view class="container">
+  <!-- 菜品列表 -->
+  <view class="dish-list">
+    <view class="dish-card" wx:for="{{dishes}}" wx:key="id">
+      <view class="dish-info" bindtap="viewDishDetail" data-dish="{{item}}">
+        <view class="dish-name">{{item.name}}</view>
+        <view class="dish-desc">{{item.description}}</view>
+        <view class="dish-price">¥{{item.price}}</view>
+      </view>
+      <view class="dish-actions">
+        <button class="btn-add" bindtap="addToCart" data-dish="{{item}}">
+          + 加入购物车
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{dishes.length === 0}}">
+    <view class="empty-state-icon">🍽️</view>
+    <view class="empty-state-text">暂无菜品</view>
+  </view>
+
+  <!-- 购物车浮动按钮 -->
+  <view class="cart-float" wx:if="{{cart.length > 0}}" bindtap="showCart">
+    <view class="cart-badge">{{getCartCount()}}</view>
+    <view class="cart-icon">🛒</view>
+    <view class="cart-total">¥{{getCartTotal()}}</view>
+  </view>
+
+  <!-- 购物车弹窗 -->
+  <view class="cart-popup" wx:if="{{showCartPopup}}">
+    <view class="cart-mask" bindtap="hideCart"></view>
+    <view class="cart-content">
+      <view class="cart-header">
+        <text>购物车</text>
+        <text bindtap="hideCart">✕</text>
+      </view>
+      <scroll-view class="cart-items" scroll-y>
+        <view class="cart-item" wx:for="{{cart}}" wx:key="dish_id">
+          <view class="item-name">{{item.dish_name}}</view>
+          <view class="item-controls">
+            <button class="btn-minus" bindtap="decreaseQuantity" data-dish-id="{{item.dish_id}}">-</button>
+            <text class="item-quantity">{{item.quantity}}</text>
+            <button class="btn-plus" bindtap="addToCart" data-dish="{{item}}">+</button>
+          </view>
+          <view class="item-price">¥{{utils.toFixed(item.price * item.quantity, 2)}}</view>
+        </view>
+      </scroll-view>
+      <view class="cart-footer">
+        <view class="footer-total">总计：¥{{getCartTotal()}}</view>
+        <button class="btn-checkout" bindtap="goToCheckout">去结算</button>
+      </view>
+    </view>
+  </view>
+</view>

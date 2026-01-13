@@ -1,0 +1,212 @@
+/* pages/index/index.wxss */
+.container {
+  padding-bottom: 120rpx;
+}
+
+/* 菜品列表 */
+.dish-list {
+  padding: 20rpx;
+}
+
+.dish-card {
+  background: white;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dish-info {
+  flex: 1;
+}
+
+.dish-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+  color: #333;
+}
+
+.dish-desc {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.dish-price {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #ff6b9d;
+}
+
+.dish-actions {
+  margin-left: 20rpx;
+}
+
+.btn-add {
+  background: linear-gradient(135deg, #ff6b9d 0%, #f093fb 100%);
+  color: white;
+  border: none;
+  border-radius: 30rpx;
+  padding: 16rpx 32rpx;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+/* 购物车浮动按钮 */
+.cart-float {
+  position: fixed;
+  bottom: 120rpx;
+  right: 30rpx;
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #ff6b9d 0%, #f093fb 100%);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4rpx 16rpx rgba(255, 107, 157, 0.4);
+  z-index: 100;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  background: #ff4444;
+  color: white;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  min-width: 32rpx;
+  text-align: center;
+}
+
+.cart-icon {
+  font-size: 48rpx;
+}
+
+.cart-total {
+  font-size: 20rpx;
+  margin-top: 4rpx;
+  font-weight: bold;
+}
+
+/* 购物车弹窗 */
+.cart-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.cart-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+.cart-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-header {
+  padding: 30rpx;
+  border-bottom: 1rpx solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.cart-items {
+  flex: 1;
+  padding: 20rpx 30rpx;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.item-name {
+  flex: 1;
+  font-size: 28rpx;
+}
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  margin: 0 20rpx;
+}
+
+.btn-minus,
+.btn-plus {
+  width: 48rpx;
+  height: 48rpx;
+  line-height: 48rpx;
+  padding: 0;
+  background: #ff6b9d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 24rpx;
+}
+
+.item-quantity {
+  margin: 0 20rpx;
+  font-size: 28rpx;
+  min-width: 40rpx;
+  text-align: center;
+}
+
+.item-price {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #ff6b9d;
+}
+
+.cart-footer {
+  padding: 30rpx;
+  border-top: 1rpx solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-total {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #ff6b9d;
+}
+
+.btn-checkout {
+  background: linear-gradient(135deg, #ff6b9d 0%, #f093fb 100%);
+  color: white;
+  border: none;
+  border-radius: 30rpx;
+  padding: 20rpx 60rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+}

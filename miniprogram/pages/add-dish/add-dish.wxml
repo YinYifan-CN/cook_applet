@@ -1,0 +1,29 @@
+<!--pages/add-dish/add-dish.wxml-->
+<view class="container">
+  <view class="form-section">
+    <view class="form-item">
+      <view class="label">菜品名称</view>
+      <input class="input" placeholder="请输入菜品名称" value="{{name}}" bindinput="onNameInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="label">价格</view>
+      <input class="input" type="digit" placeholder="请输入价格" value="{{price}}" bindinput="onPriceInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="label">描述</view>
+      <textarea class="textarea" placeholder="请输入菜品描述（选填）" value="{{description}}" bindinput="onDescInput" maxlength="200" />
+    </view>
+
+    <view class="form-item">
+      <view class="label">制作方式</view>
+      <textarea class="textarea" placeholder="请输入制作方式/步骤（选填）" value="{{cookingInstructions}}" bindinput="onCookingInput" maxlength="500" />
+    </view>
+  </view>
+
+  <view class="button-section">
+    <button class="btn-submit" bindtap="submitDish">{{isEdit ? '保存修改' : '添加菜品'}}</button>
+    <button class="btn-cancel" bindtap="cancel">取消</button>
+  </view>
+</view>

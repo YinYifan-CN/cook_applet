@@ -1,0 +1,131 @@
+<!--pages/merchant/merchant.wxml-->
+<wxs module="utils">
+  var toFixed = function(num, digits) {
+    return Number(num).toFixed(digits || 2);
+  };
+  module.exports.toFixed = toFixed;
+</wxs>
+
+<view class="container">
+  <!-- Tab切换 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === 'orders' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-tab="orders"
+    >订单管理</view>
+    <view 
+      class="tab-item {{currentTab === 'dishes' ? 'active' : ''}}" 
+      bindtap="switchTab" 
+      data-tab="dishes"
+    >菜品管理</view>
+  </view>
+
+  <!-- 订单管理 -->
+  <view wx:if="{{currentTab === 'orders'}}">
+    <!-- 统计卡片 -->
+  <view class="stats-section">
+    <view class="stat-card">
+      <view class="stat-value">{{totalOrders}}</view>
+      <view class="stat-label">总订单</view>
+    </view>
+    <view class="stat-card pending">
+      <view class="stat-value">{{pendingOrders}}</view>
+      <view class="stat-label">待处理</view>
+    </view>
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view 
+      class="filter-item {{statusFilter === 'all' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="all"
+    >全部</view>
+    <view 
+      class="filter-item {{statusFilter === 'pending' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="pending"
+    >待确认</view>
+    <view 
+      class="filter-item {{statusFilter === 'preparing' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="preparing"
+    >制作中</view>
+    <view 
+      class="filter-item {{statusFilter === 'completed' ? 'active' : ''}}" 
+      bindtap="filterOrders" 
+      data-status="completed"
+    >已完成</view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="order-list">
+    <view class="order-card" wx:for="{{filteredOrders}}" wx:key="id">
+      <view class="order-header" bindtap="viewOrderDetail" data-order="{{item}}">
+        <view class="order-info">
+          <view class="order-id">{{item.id}}</view>
+          <view class="order-user">顾客：{{item.user_name}}</view>
+        </view>
+        <view class="order-status status-{{item.status}}">{{statusMap[item.status]}}</view>
+      </view>
+
+      <view class="order-items">
+        <view class="order-item" wx:for="{{item.items}}" wx:key="dish_id" wx:for-item="dish">
+          <text>{{dish.dish_name}} x{{dish.quantity}}</text>
+          <text class="item-price">¥{{utils.toFixed(dish.price * dish.quantity, 2)}}</text>
+        </view>
+      </view>
+
+      <view class="order-footer">
+        <view class="order-time">{{formatTime(item.created_at)}}</view>
+        <view class="order-total">¥{{item.total_amount}}</view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="order-actions" wx:if="{{item.nextStatus}}">
+        <button 
+          class="btn-action"
+          bindtap="updateStatus"
+          data-order-id="{{item.id}}"
+          data-status="{{item.nextStatus}}"
+        >
+          {{item.nextStatusText}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{filteredOrders.length === 0}}">
+    <view class="empty-state-icon">📋</view>
+    <view class="empty-state-text">暂无订单</view>
+  </view>
+  </view>
+
+  <!-- 菜品管理 -->
+  <view wx:if="{{currentTab === 'dishes'}}">
+    <view class="dish-header">
+      <button class="btn-add-dish" bindtap="showAddDishDialog">+ 添加菜品</button>
+    </view>
+
+    <view class="dish-list">
+      <view class="dish-card" wx:for="{{dishes}}" wx:key="id">
+        <view class="dish-info">
+          <view class="dish-name">{{item.name}}</view>
+          <view class="dish-price">¥{{item.price}}</view>
+          <view class="dish-desc">{{item.description}}</view>
+        </view>
+        <view class="dish-actions">
+          <button class="btn-edit" bindtap="editDish" data-dish="{{item}}">编辑</button>
+          <button class="btn-delete" bindtap="deleteDish" data-id="{{item.id}}">删除</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{dishes.length === 0}}">
+      <view class="empty-state-icon">🍽️</view>
+      <view class="empty-state-text">暂无菜品</view>
+    </view>
+  </view>
+</view>

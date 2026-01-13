@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商家管理端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .tabs {
+            display: flex;
+            background: white;
+            padding: 12px 16px;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #576b95;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #ff6b6b;
+            color: white;
+            font-weight: 600;
+        }
+        .tab:hover:not(.active) {
+            background: #e8e8e8;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            margin: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .stat-card {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .container {
+            padding: 0 15px 20px;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            padding: 5px 0;
+        }
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #ff6b6b;
+            background: white;
+            color: #ff6b6b;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .filter-btn.active {
+            background: #ff6b6b;
+            color: white;
+        }
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #ff6b6b;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #eee;
+        }
+        .order-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        .order-time {
+            font-size: 13px;
+            color: #999;
+        }
+        .order-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-confirmed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-preparing {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-ready {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-completed {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .order-items {
+            margin: 15px 0;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: #555;
+        }
+        .item-name {
+            font-weight: 500;
+        }
+        .item-quantity {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .order-note {
+            background: #fffbea;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+            border-left: 3px solid #ffc107;
+        }
+        .order-total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-align: right;
+            margin: 10px 0;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-confirm {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-prepare {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-ready {
+            background: #FF9800;
+            color: white;
+        }
+        .btn-complete {
+            background: #9E9E9E;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        .notification.show {
+            display: block;
+        }
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-connected {
+            background: #4CAF50;
+            color: white;
+        }
+        .status-disconnected {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏪 香香厨房（商家端）</h1>
+        <p>用于管理菜单、接收点单，让每一顿饭都按心意完成</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab" onclick="location.href='demo.html'">👤 点餐</button>
+        <button class="tab active">🏪 商家端</button>
+    </div>
+
+    <div style="padding: 15px; background: white; margin: 15px; border-radius: 12px; display: flex; gap: 10px;">
+        <button onclick="showAddDishModal()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold;">➕ 添加新菜品</button>
+        <button onclick="viewDishes()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold;">📋 查看菜品列表</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value" id="totalOrders">0</div>
+            <div class="stat-label">总订单</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="stat-value" id="pendingOrders">0</div>
+            <div class="stat-label">待处理</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="stat-value" id="totalRevenue">¥0</div>
+            <div class="stat-label">总收入</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterOrders('all')">全部订单</button>
+            <button class="filter-btn" onclick="filterOrders('pending')">待确认</button>
+            <button class="filter-btn" onclick="filterOrders('confirmed')">已确认</button>
+            <button class="filter-btn" onclick="filterOrders('preparing')">制作中</button>
+            <button class="filter-btn" onclick="filterOrders('ready')">待取餐</button>
+            <button class="filter-btn" onclick="filterOrders('completed')">已完成</button>
+        </div>
+
+        <div id="ordersList"></div>
+    </div>
+
+    <div class="notification" id="notification">
+        🔔 新订单到达！
+    </div>
+
+    <!-- 添加菜品模态框 -->
+    <div class="modal" id="addDishModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 15px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto;">
+            <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">➕ 添加新菜品</h2>
+                <span onclick="closeAddDishModal()" style="font-size: 28px; cursor: pointer; color: #999;">&times;</span>
+            </div>
+            <div style="padding: 20px;">
+                <form id="addDishForm" onsubmit="submitNewDish(event)">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">菜品名称 *</label>
+                        <input type="text" id="dishName" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">价格（元）*</label>
+                        <input type="number" id="dishPrice" step="0.01" min="0" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">菜品描述 *</label>
+                        <textarea id="dishDescription" required rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">制作说明（可选）</label>
+                        <textarea id="dishInstructions" rows="5" placeholder="食材：&#10;调料：&#10;步骤：" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="dishAvailable" checked style="margin-right: 8px; width: 18px; height: 18px;">
+                            <span style="font-weight: bold;">上架销售</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" style="flex: 1; padding: 14px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">✅ 确认添加</button>
+                        <button type="button" onclick="closeAddDishModal()" style="flex: 1; padding: 14px; background: #999; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑菜品模态框 -->
+    <div class="modal" id="editDishModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 15px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto;">
+            <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">✏️ 编辑菜品</h2>
+                <span onclick="closeEditDishModal()" style="font-size: 28px; cursor: pointer; color: #999;">&times;</span>
+            </div>
+            <div style="padding: 20px;">
+                <form id="editDishForm" onsubmit="submitEditDish(event)">
+                    <input type="hidden" id="editDishId">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">菜品名称 *</label>
+                        <input type="text" id="editDishName" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">价格（元）*</label>
+                        <input type="number" id="editDishPrice" step="0.01" min="0" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">菜品描述 *</label>
+                        <textarea id="editDishDescription" required rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">制作说明（可选）</label>
+                        <textarea id="editDishInstructions" rows="5" placeholder="食材：&#10;调料：&#10;步骤：" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="editDishAvailable" style="margin-right: 8px; width: 18px; height: 18px;">
+                            <span style="font-weight: bold;">上架销售</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" style="flex: 1; padding: 14px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">✅ 保存修改</button>
+                        <button type="button" onclick="closeEditDishModal()" style="flex: 1; padding: 14px; background: #999; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 菜品列表模态框 -->
+    <div class="modal" id="dishListModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 15px; width: 90%; max-width: 800px; max-height: 85vh; overflow-y: auto;">
+            <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">📋 菜品列表</h2>
+                <span onclick="closeDishListModal()" style="font-size: 28px; cursor: pointer; color: #999;">&times;</span>
+            </div>
+            <div id="dishListContent" style="padding: 20px;"></div>
+        </div>
+    </div>
+
+    <div class="connection-status status-disconnected" id="connectionStatus">
+        🔴 未连接
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const WS_URL = 'ws://localhost:8000/ws/merchant';
+        let orders = [];
+        let currentFilter = 'all';
+        let ws = null;
+
+        // 加载订单
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/orders`);
+                orders = await response.json();
+                updateStats();
+                displayOrders();
+            } catch (error) {
+                console.error('加载订单失败:', error);
+            }
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('totalOrders').textContent = orders.length;
+            const pending = orders.filter(o => o.status === 'pending').length;
+            document.getElementById('pendingOrders').textContent = pending;
+            const revenue = orders.reduce((sum, o) => sum + o.total_amount, 0);
+            document.getElementById('totalRevenue').textContent = `¥${revenue.toFixed(2)}`;
+        }
+
+        // 显示订单
+        function displayOrders() {
+            const container = document.getElementById('ordersList');
+            let filtered = currentFilter === 'all' 
+                ? orders 
+                : orders.filter(o => o.status === currentFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div>暂无订单</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(order => {
+                const statusClass = `status-${order.status}`;
+                const statusText = {
+                    'pending': '待确认',
+                    'confirmed': '已确认',
+                    'preparing': '制作中',
+                    'ready': '待取餐',
+                    'completed': '已完成'
+                }[order.status] || order.status;
+
+                let buttons = '';
+                if (order.status === 'pending') {
+                    buttons = `<button class="action-btn btn-confirm" onclick="updateOrderStatus('${order.id}', 'confirmed')">✅ 确认订单</button>`;
+                } else if (order.status === 'confirmed') {
+                    buttons = `<button class="action-btn btn-prepare" onclick="updateOrderStatus('${order.id}', 'preparing')">👨‍🍳 开始制作</button>`;
+                } else if (order.status === 'preparing') {
+                    buttons = `<button class="action-btn btn-ready" onclick="updateOrderStatus('${order.id}', 'ready')">🔔 制作完成</button>`;
+                } else if (order.status === 'ready') {
+                    buttons = `<button class="action-btn btn-complete" onclick="updateOrderStatus('${order.id}', 'completed')">✔️ 已取餐</button>`;
+                }
+
+                const itemsHtml = order.items.map(item => `
+                    <div class="order-item">
+                        <span class="item-name">${item.dish_name}</span>
+                        <span class="item-quantity">x${item.quantity}</span>
+                    </div>
+                `).join('');
+
+                const noteHtml = order.note 
+                    ? `<div class="order-note">📝 备注: ${order.note}</div>` 
+                    : '';
+
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-number">订单号: ${order.id}</div>
+                                <div class="order-time">${new Date(order.created_at).toLocaleString('zh-CN')}</div>
+                            </div>
+                            <div class="order-status ${statusClass}">${statusText}</div>
+                        </div>
+                        <div class="order-items">
+                            ${itemsHtml}
+                        </div>
+                        ${noteHtml}
+                        <div class="order-total">合计: ¥${order.total_amount.toFixed(2)}</div>
+                        <div class="action-buttons">
+                            ${buttons}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 过滤订单
+        function filterOrders(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            displayOrders();
+        }
+
+        // 更新订单状态
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/orders/${orderId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    showNotification(`订单状态已更新为: ${newStatus}`);
+                    await loadOrders();
+                }
+            } catch (error) {
+                console.error('更新订单状态失败:', error);
+                alert('更新失败，请重试');
+            }
+        }
+
+        // 显示通知
+        function showNotification(message) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
+
+        // WebSocket连接
+        function connectWebSocket() {
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                console.log('WebSocket连接成功');
+                const status = document.getElementById('connectionStatus');
+                status.className = 'connection-status status-connected';
+                status.textContent = '🟢 已连接';
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('收到新订单:', data);
+                showNotification('🔔 新订单到达！');
+                
+                // 播放提示音（可选）
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBze/ejDcIF2S56+2iUw0PVand8bhnGwU7k9r0x3QpBS19zvDahzgIGGi78OGcTwwOUKXh8bllHAU7k9r0x3QpBS19zvDahzgIGGi78OGcTwwOUKXh8bllHAU7k9r0x3QpBS19zvDahzgIGGi78OGcTwwOUKXh8bllHAU7k9r0x3QpBS19zvDahzgIGGi78OGcTwwOUKXh8bllHAU7k9r0x3QpBS19zvDahzgIGGi78OGcTwwOUKXh8bllHAU7k9r0x3QpBS19zvDahzgIGGi78OGcTwwOUKXh8bllHAU7k9r0x3QpBS19zvDahzgIGGi78OGcTwwO');
+                // audio.play();
+
+                loadOrders();
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket连接关闭');
+                const status = document.getElementById('connectionStatus');
+                status.className = 'connection-status status-disconnected';
+                status.textContent = '🔴 未连接';
+                
+                // 5秒后重连
+                setTimeout(connectWebSocket, 5000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket错误:', error);
+            };
+        }
+
+        // 显示添加菜品模态框
+        function showAddDishModal() {
+            document.getElementById('addDishModal').style.display = 'flex';
+            document.getElementById('addDishForm').reset();
+        }
+
+        // 关闭添加菜品模态框
+        function closeAddDishModal() {
+            document.getElementById('addDishModal').style.display = 'none';
+        }
+
+        // 提交新菜品
+        async function submitNewDish(event) {
+            event.preventDefault();
+            
+            const dishData = {
+                id: Date.now(), // 使用时间戳作为临时ID
+                name: document.getElementById('dishName').value,
+                category: '菜品', // 统一分类
+                price: parseFloat(document.getElementById('dishPrice').value),
+                description: document.getElementById('dishDescription').value,
+                cooking_instructions: document.getElementById('dishInstructions').value || '暂无制作说明',
+                is_available: document.getElementById('dishAvailable').checked,
+                image_url: null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/dishes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dishData)
+                });
+
+                if (response.ok) {
+                    showNotification('✅ 菜品添加成功！');
+                    closeAddDishModal();
+                    // 可选：刷新菜品列表
+                } else {
+                    alert('添加失败，请重试');
+                }
+            } catch (error) {
+                console.error('添加菜品失败:', error);
+                alert('添加失败，请检查网络连接');
+            }
+        }
+
+        // 查看菜品列表
+        async function viewDishes() {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/dishes`);
+                const dishes = await response.json();
+                
+                const container = document.getElementById('dishListContent');
+                if (dishes.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无菜品</div>';
+                } else {
+                    container.innerHTML = dishes.map(dish => `
+                        <div style="border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">${dish.name}</div>
+                                    <div style="color: #666; font-size: 14px; margin-bottom: 5px;">${dish.description}</div>
+                                    <div style="color: #ff6b6b; font-size: 20px; font-weight: bold; margin-top: 10px;">¥${dish.price.toFixed(2)}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="padding: 5px 12px; background: ${dish.is_available ? '#4CAF50' : '#999'}; color: white; border-radius: 15px; font-size: 12px; margin-bottom: 10px;">
+                                        ${dish.is_available ? '✅ 在售' : '❌ 下架'}
+                                    </div>
+                                    <button onclick="editDish(${dish.id})" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;">✏️ 编辑</button>
+                                </div>
+                            </div>
+                            ${dish.cooking_instructions && dish.cooking_instructions !== '暂无制作说明' ? `
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; color: #667eea; font-weight: bold;">📖 制作说明</summary>
+                                    <div style="background: #f5f5f5; padding: 10px; border-radius: 8px; margin-top: 5px; white-space: pre-wrap; font-size: 13px;">${dish.cooking_instructions}</div>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
+                
+                document.getElementById('dishListModal').style.display = 'flex';
+            } catch (error) {
+                console.error('加载菜品失败:', error);
+                alert('加载失败，请重试');
+            }
+        }
+
+        // 关闭菜品列表模态框
+        function closeDishListModal() {
+            document.getElementById('dishListModal').style.display = 'none';
+        }
+
+        // 编辑菜品
+        async function editDish(dishId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/dishes`);
+                const dishes = await response.json();
+                const dish = dishes.find(d => d.id === dishId);
+                
+                if (dish) {
+                    document.getElementById('editDishId').value = dish.id;
+                    document.getElementById('editDishName').value = dish.name;
+                    document.getElementById('editDishPrice').value = dish.price;
+                    document.getElementById('editDishDescription').value = dish.description;
+                    document.getElementById('editDishInstructions').value = dish.cooking_instructions === '暂无制作说明' ? '' : dish.cooking_instructions;
+                    document.getElementById('editDishAvailable').checked = dish.is_available;
+                    
+                    // 关闭菜品列表模态框
+                    closeDishListModal();
+                    // 打开编辑模态框
+                    document.getElementById('editDishModal').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('加载菜品详情失败:', error);
+                alert('加载失败，请重试');
+            }
+        }
+
+        // 关闭编辑菜品模态框
+        function closeEditDishModal() {
+            document.getElementById('editDishModal').style.display = 'none';
+        }
+
+        // 提交编辑菜品
+        async function submitEditDish(event) {
+            event.preventDefault();
+            
+            const dishId = parseInt(document.getElementById('editDishId').value);
+            const dishData = {
+                id: dishId,
+                name: document.getElementById('editDishName').value,
+                category: '菜品', // 统一分类
+                price: parseFloat(document.getElementById('editDishPrice').value),
+                description: document.getElementById('editDishDescription').value,
+                cooking_instructions: document.getElementById('editDishInstructions').value || '暂无制作说明',
+                is_available: document.getElementById('editDishAvailable').checked,
+                image_url: null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/dishes/${dishId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dishData)
+                });
+
+                if (response.ok) {
+                    showNotification('✅ 菜品修改成功！');
+                    closeEditDishModal();
+                    // 刷新菜品列表
+                    viewDishes();
+                } else {
+                    alert('修改失败，请重试');
+                }
+            } catch (error) {
+                console.error('修改菜品失败:', error);
+                alert('修改失败，请检查网络连接');
+            }
+        }
+
+        // 页面加载时初始化
+        loadOrders();
+        connectWebSocket();
+
+        // 定期刷新订单（作为WebSocket的备用方案）
+        setInterval(loadOrders, 30000);
+    </script>
+</body>
+</html>

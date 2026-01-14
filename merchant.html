@@ -148,7 +148,7 @@
             background: #fff3cd;
             color: #856404;
         }
-        .status-confirmed {
+        .status-accepted {
             background: #d1ecf1;
             color: #0c5460;
         }
@@ -156,13 +156,13 @@
             background: #d4edda;
             color: #155724;
         }
-        .status-ready {
-            background: #f8d7da;
-            color: #721c24;
-        }
         .status-completed {
             background: #e2e3e5;
             color: #383d41;
+        }
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
         }
         .order-items {
             margin: 15px 0;
@@ -314,11 +314,11 @@
     <div class="container">
         <div class="filter-bar">
             <button class="filter-btn active" onclick="filterOrders('all')">全部订单</button>
-            <button class="filter-btn" onclick="filterOrders('pending')">待确认</button>
-            <button class="filter-btn" onclick="filterOrders('confirmed')">已确认</button>
+            <button class="filter-btn" onclick="filterOrders('pending')">待接单</button>
+            <button class="filter-btn" onclick="filterOrders('accepted')">已接单</button>
             <button class="filter-btn" onclick="filterOrders('preparing')">制作中</button>
-            <button class="filter-btn" onclick="filterOrders('ready')">待取餐</button>
             <button class="filter-btn" onclick="filterOrders('completed')">已完成</button>
+            <button class="filter-btn" onclick="filterOrders('cancelled')">已取消</button>
         </div>
 
         <div id="ordersList"></div>
@@ -420,6 +420,17 @@
         </div>
     </div>
 
+    <!-- 订单详情模态框 -->
+    <div class="modal" id="orderDetailModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 15px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto;">
+            <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">📋 订单详情</h2>
+                <span onclick="closeOrderDetailModal()" style="font-size: 28px; cursor: pointer; color: #999;">&times;</span>
+            </div>
+            <div id="orderDetailContent" style="padding: 20px;"></div>
+        </div>
+    </div>
+
     <div class="connection-status status-disconnected" id="connectionStatus">
         🔴 未连接
     </div>
@@ -448,7 +459,8 @@
             document.getElementById('totalOrders').textContent = orders.length;
             const pending = orders.filter(o => o.status === 'pending').length;
             document.getElementById('pendingOrders').textContent = pending;
-            const revenue = orders.reduce((sum, o) => sum + o.total_amount, 0);
+            const completedOrders = orders.filter(o => o.status === 'completed');
+            const revenue = completedOrders.reduce((sum, o) => sum + o.total_amount, 0);
             document.getElementById('totalRevenue').textContent = `¥${revenue.toFixed(2)}`;
         }
 
@@ -472,28 +484,35 @@
             container.innerHTML = filtered.map(order => {
                 const statusClass = `status-${order.status}`;
                 const statusText = {
-                    'pending': '待确认',
-                    'confirmed': '已确认',
+                    'pending': '待接单',
+                    'accepted': '已接单',
                     'preparing': '制作中',
-                    'ready': '待取餐',
-                    'completed': '已完成'
+                    'completed': '已完成',
+                    'cancelled': '已取消'
                 }[order.status] || order.status;
 
                 let buttons = '';
                 if (order.status === 'pending') {
-                    buttons = `<button class="action-btn btn-confirm" onclick="updateOrderStatus('${order.id}', 'confirmed')">✅ 确认订单</button>`;
-                } else if (order.status === 'confirmed') {
-                    buttons = `<button class="action-btn btn-prepare" onclick="updateOrderStatus('${order.id}', 'preparing')">👨‍🍳 开始制作</button>`;
+                    buttons = `
+                        <button class="action-btn btn-confirm" onclick="acceptOrder('${order.id}')">✅ 接单</button>
+                        <button class="action-btn" style="background: #999;" onclick="cancelOrder('${order.id}')">❌ 拒绝</button>
+                    `;
+                } else if (order.status === 'accepted') {
+                    buttons = `
+                        <button class="action-btn btn-prepare" onclick="startPreparing('${order.id}')">👨‍🍳 开始制作</button>
+                        <button class="action-btn" style="background: #2196F3; color: white;" onclick="viewOrderDetail('${order.id}')">📋 查看详情</button>
+                    `;
                 } else if (order.status === 'preparing') {
-                    buttons = `<button class="action-btn btn-ready" onclick="updateOrderStatus('${order.id}', 'ready')">🔔 制作完成</button>`;
-                } else if (order.status === 'ready') {
-                    buttons = `<button class="action-btn btn-complete" onclick="updateOrderStatus('${order.id}', 'completed')">✔️ 已取餐</button>`;
+                    buttons = `
+                        <button class="action-btn btn-ready" onclick="completeOrder('${order.id}')">✔️ 完成</button>
+                        <button class="action-btn" style="background: #2196F3; color: white;" onclick="viewOrderDetail('${order.id}')">📋 查看详情</button>
+                    `;
                 }
 
                 const itemsHtml = order.items.map(item => `
                     <div class="order-item">
                         <span class="item-name">${item.dish_name}</span>
-                        <span class="item-quantity">x${item.quantity}</span>
+                        <span class="item-quantity">x${item.quantity} @ ¥${item.price}</span>
                     </div>
                 `).join('');
 
@@ -506,7 +525,7 @@
                         <div class="order-header">
                             <div>
                                 <div class="order-number">订单号: ${order.id}</div>
-                                <div class="order-time">${new Date(order.created_at).toLocaleString('zh-CN')}</div>
+                                <div class="order-time">顾客: ${order.user_name} | ${new Date(order.created_at).toLocaleString('zh-CN')}</div>
                             </div>
                             <div class="order-status ${statusClass}">${statusText}</div>
                         </div>
@@ -533,7 +552,154 @@
             displayOrders();
         }
 
-        // 更新订单状态
+        // 接单
+        async function acceptOrder(orderId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/orders/${orderId}/accept`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showNotification('✅ 订单已接受');
+                    await loadOrders();
+                } else {
+                    alert('接单失败，请重试');
+                }
+            } catch (error) {
+                console.error('接单失败:', error);
+                alert('接单失败，请检查网络连接');
+            }
+        }
+
+        // 开始制作
+        async function startPreparing(orderId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/orders/${orderId}/start`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showNotification('🍳 开始制作订单');
+                    await loadOrders();
+                } else {
+                    alert('操作失败，请重试');
+                }
+            } catch (error) {
+                console.error('操作失败:', error);
+                alert('操作失败，请检查网络连接');
+            }
+        }
+
+        // 完成订单
+        async function completeOrder(orderId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/orders/${orderId}/complete`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showNotification('✅ 订单已完成');
+                    await loadOrders();
+                } else {
+                    alert('操作失败，请重试');
+                }
+            } catch (error) {
+                console.error('操作失败:', error);
+                alert('操作失败，请检查网络连接');
+            }
+        }
+
+        // 取消订单
+        async function cancelOrder(orderId) {
+            if (!confirm('确定要拒绝这个订单吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/orders/${orderId}/cancel`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showNotification('❌ 订单已取消');
+                    await loadOrders();
+                } else {
+                    alert('操作失败，请重试');
+                }
+            } catch (error) {
+                console.error('操作失败:', error);
+                alert('操作失败，请检查网络连接');
+            }
+        }
+
+        // 查看订单详情（包含制作说明）
+        async function viewOrderDetail(orderId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/merchant/orders/${orderId}`);
+                const order = await response.json();
+
+                const statusText = {
+                    'pending': '待接单',
+                    'accepted': '已接单',
+                    'preparing': '制作中',
+                    'completed': '已完成',
+                    'cancelled': '已取消'
+                }[order.status] || order.status;
+
+                const itemsHtml = order.items.map((item, index) => `
+                    <div style="border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #f9f9f9;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: bold; color: #333;">${item.dish_name}</div>
+                                <div style="color: #666; margin-top: 5px;">数量: <span style="color: #ff6b6b; font-weight: bold;">x${item.quantity}</span> | 单价: ¥${item.price}</div>
+                            </div>
+                            <div style="font-size: 18px; font-weight: bold; color: #ff6b6b;">¥${(item.price * item.quantity).toFixed(2)}</div>
+                        </div>
+                        ${item.description ? `<div style="color: #888; font-size: 14px; margin-bottom: 10px;">📝 ${item.description}</div>` : ''}
+                        ${item.cooking_instructions ? `
+                            <details style="margin-top: 10px;">
+                                <summary style="cursor: pointer; color: #667eea; font-weight: bold; padding: 10px; background: white; border-radius: 8px;">👨‍🍳 制作说明（点击查看）</summary>
+                                <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 8px; white-space: pre-wrap; font-size: 14px; line-height: 1.6; border-left: 4px solid #667eea;">${item.cooking_instructions}</div>
+                            </details>
+                        ` : '<div style="color: #999; font-size: 13px; padding: 10px; background: white; border-radius: 8px; text-align: center;">暂无制作说明</div>'}
+                    </div>
+                `).join('');
+
+                document.getElementById('orderDetailContent').innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 16px; margin-bottom: 10px;"><strong>订单号：</strong>${order.id}</div>
+                        <div style="font-size: 14px; margin-bottom: 10px;"><strong>顾客：</strong>${order.user_name}</div>
+                        <div style="font-size: 14px; margin-bottom: 10px;"><strong>下单时间：</strong>${new Date(order.created_at).toLocaleString('zh-CN')}</div>
+                        <div style="font-size: 14px; margin-bottom: 10px;">
+                            <strong>订单状态：</strong>
+                            <span style="padding: 5px 15px; background: ${order.status === 'pending' ? '#fff3cd' : order.status === 'accepted' ? '#d1ecf1' : order.status === 'preparing' ? '#d4edda' : '#e2e3e5'}; border-radius: 15px; font-weight: bold;">${statusText}</span>
+                        </div>
+                        ${order.note ? `<div style="background: #fffbea; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #ffc107;"><strong>📝 备注：</strong>${order.note}</div>` : ''}
+                    </div>
+                    
+                    <div style="border-top: 2px dashed #eee; padding-top: 15px; margin-bottom: 15px;">
+                        <h3 style="margin-bottom: 15px;">📋 订单明细</h3>
+                        ${itemsHtml}
+                    </div>
+                    
+                    <div style="border-top: 2px dashed #eee; padding-top: 15px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #ff6b6b; text-align: right;">
+                            合计：¥${order.total_amount.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('orderDetailModal').style.display = 'flex';
+            } catch (error) {
+                console.error('加载订单详情失败:', error);
+                alert('加载失败，请重试');
+            }
+        }
+
+        // 关闭订单详情模态框
+        function closeOrderDetailModal() {
+            document.getElementById('orderDetailModal').style.display = 'none';
+        }
+
+        // 更新订单状态（保留旧方法以兼容）
         async function updateOrderStatus(orderId, newStatus) {
             try {
                 const response = await fetch(`${API_BASE}/api/merchant/orders/${orderId}`, {

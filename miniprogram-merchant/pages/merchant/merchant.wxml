@@ -1,0 +1,110 @@
+<!--pages/merchant/merchant.wxml-->
+<view class="container">
+  <!-- 统计卡片 -->
+  <view class="stats-section">
+    <view class="stat-card">
+      <view class="stat-value">{{totalOrders}}</view>
+      <view class="stat-label">总订单</view>
+    </view>
+    <view class="stat-card stat-pending">
+      <view class="stat-value">{{pendingOrders}}</view>
+      <view class="stat-label">待处理</view>
+    </view>
+    <view class="stat-card stat-revenue">
+      <view class="stat-value">¥{{totalRevenue}}</view>
+      <view class="stat-label">总收入</view>
+    </view>
+  </view>
+
+  <!-- 筛选栏 -->
+  <scroll-view class="filter-bar" scroll-x>
+    <view class="filter-btn {{statusFilter === 'all' ? 'active' : ''}}" bindtap="filterOrders" data-status="all">
+      全部订单
+    </view>
+    <view class="filter-btn {{statusFilter === 'pending' ? 'active' : ''}}" bindtap="filterOrders" data-status="pending">
+      待接单
+    </view>
+    <view class="filter-btn {{statusFilter === 'accepted' ? 'active' : ''}}" bindtap="filterOrders" data-status="accepted">
+      已接单
+    </view>
+    <view class="filter-btn {{statusFilter === 'preparing' ? 'active' : ''}}" bindtap="filterOrders" data-status="preparing">
+      制作中
+    </view>
+    <view class="filter-btn {{statusFilter === 'completed' ? 'active' : ''}}" bindtap="filterOrders" data-status="completed">
+      已完成
+    </view>
+    <view class="filter-btn {{statusFilter === 'cancelled' ? 'active' : ''}}" bindtap="filterOrders" data-status="cancelled">
+      已取消
+    </view>
+  </scroll-view>
+
+  <!-- 订单列表 -->
+  <view class="orders-list">
+    <view class="order-card" wx:for="{{filteredOrders}}" wx:key="id">
+      <!-- 订单头部 -->
+      <view class="order-header">
+        <view class="order-info">
+          <view class="order-number">订单号: {{item.id}}</view>
+          <view class="order-meta">
+            <text>顾客: {{item.user_name}}</text>
+            <text class="order-time">{{item.createdAtFormatted}}</text>
+          </view>
+        </view>
+        <view class="order-status" style="background: {{statusColors[item.status]}}">
+          {{statusMap[item.status]}}
+        </view>
+      </view>
+
+      <!-- 订单项 -->
+      <view class="order-items">
+        <view class="order-item" wx:for="{{item.items}}" wx:key="dish_id" wx:for-item="dish">
+          <text class="item-name">{{dish.dish_name}}</text>
+          <text class="item-quantity">x{{dish.quantity}}</text>
+          <text class="item-price">¥{{dish.priceFormatted}}</text>
+        </view>
+      </view>
+
+      <!-- 备注 -->
+      <view class="order-note" wx:if="{{item.note}}">
+        📝 备注: {{item.note}}
+      </view>
+
+      <!-- 总价 -->
+      <view class="order-total">
+        合计: ¥{{item.totalAmountFormatted}}
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="order-actions">
+        <!-- 待接单状态 -->
+        <block wx:if="{{item.status === 'pending'}}">
+          <button class="action-btn btn-accept" bindtap="acceptOrder" data-id="{{item.id}}">✅ 接单</button>
+          <button class="action-btn btn-cancel" bindtap="cancelOrder" data-id="{{item.id}}">❌ 拒绝</button>
+        </block>
+
+        <!-- 已接单状态 -->
+        <block wx:if="{{item.status === 'accepted'}}">
+          <button class="action-btn btn-start" bindtap="startPreparing" data-id="{{item.id}}">👨‍🍳 开始制作</button>
+          <button class="action-btn btn-detail" bindtap="viewOrderDetail" data-id="{{item.id}}">📋 查看详情</button>
+        </block>
+
+        <!-- 制作中状态 -->
+        <block wx:if="{{item.status === 'preparing'}}">
+          <button class="action-btn btn-complete" bindtap="completeOrder" data-id="{{item.id}}">✔️ 完成</button>
+          <button class="action-btn btn-detail" bindtap="viewOrderDetail" data-id="{{item.id}}">📋 查看详情</button>
+        </block>
+
+        <!-- 已完成/已取消状态 -->
+        <block wx:if="{{item.status === 'completed' || item.status === 'cancelled'}}">
+          <button class="action-btn btn-detail" bindtap="viewOrderDetail" data-id="{{item.id}}">📋 查看详情</button>
+        </block>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{filteredOrders.length === 0}}">
+      <view class="empty-icon">📭</view>
+      <view class="empty-text">暂无订单</view>
+    </view>
+  </view>
+</view>

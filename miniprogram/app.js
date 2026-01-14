@@ -3,7 +3,7 @@ App({
   globalData: {
     userInfo: null,
     cart: [],  // 购物车数据
-    apiBase: 'http://localhost:8000'  // 开发环境，正式环境改为 https://api.yourdomain.com
+    apiBase: 'http://192.168.70.209:8000'  // 开发环境使用局域网IP（手机需连同一WiFi）
   },
 
   onLaunch() {

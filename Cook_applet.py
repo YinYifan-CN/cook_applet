@@ -75,11 +75,10 @@ app.add_middleware(
 
 class OrderStatus(str, Enum):
     """订单状态枚举"""
-    PENDING = "pending"  # 待确认
-    CONFIRMED = "confirmed"  # 已确认
-    PREPARING = "preparing"  # 制作中
-    READY = "ready"  # 待取餐
-    COMPLETED = "completed"  # 已完成
+    PENDING = "pending"  # 待接单（用户刚下单）
+    ACCEPTED = "accepted"  # 已接单（商家已接单）
+    PREPARING = "preparing"  # 制作中（商家正在制作）
+    COMPLETED = "completed"  # 已完成（制作完成）
     CANCELLED = "cancelled"  # 已取消
 
 
@@ -292,13 +291,26 @@ async def get_all_orders(status: Optional[str] = None):
     return orders_db
 
 
-@app.get("/api/merchant/orders/{order_id}", response_model=Order)
+@app.get("/api/merchant/orders/{order_id}")
 async def get_order_detail(order_id: str):
-    """获取订单详情"""
+    """获取订单详情（包含菜品制作说明）"""
     order = next((o for o in orders_db if o.id == order_id), None)
     if not order:
         raise HTTPException(status_code=404, detail="订单不存在")
-    return order
+    
+    # 为每个订单项添加制作说明
+    order_dict = order.dict()
+    enhanced_items = []
+    for item in order.items:
+        dish = next((d for d in dishes_db if d.id == item.dish_id), None)
+        item_dict = item.dict()
+        if dish:
+            item_dict["cooking_instructions"] = dish.cooking_instructions
+            item_dict["description"] = dish.description
+        enhanced_items.append(item_dict)
+    
+    order_dict["items"] = enhanced_items
+    return order_dict
 
 
 class UpdateOrderStatusRequest(BaseModel):
@@ -318,6 +330,78 @@ async def update_order_status(order_id: str, request: UpdateOrderStatusRequest):
     print(f"✅ 订单 {order_id} 状态更新为: {request.status}")
     
     return {"success": True, "message": "状态更新成功", "order": order}
+
+
+@app.post("/api/merchant/orders/{order_id}/accept")
+async def accept_order(order_id: str):
+    """商家接单"""
+    order = next((o for o in orders_db if o.id == order_id), None)
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    
+    if order.status != OrderStatus.PENDING:
+        raise HTTPException(status_code=400, detail="订单状态不正确，无法接单")
+    
+    order.status = OrderStatus.ACCEPTED
+    order.updated_at = datetime.now()
+    
+    print(f"✅ 商家已接单: {order_id}")
+    
+    return {"success": True, "message": "接单成功", "order": order}
+
+
+@app.post("/api/merchant/orders/{order_id}/start")
+async def start_preparing(order_id: str):
+    """开始制作订单"""
+    order = next((o for o in orders_db if o.id == order_id), None)
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    
+    if order.status != OrderStatus.ACCEPTED:
+        raise HTTPException(status_code=400, detail="订单状态不正确，请先接单")
+    
+    order.status = OrderStatus.PREPARING
+    order.updated_at = datetime.now()
+    
+    print(f"🍳 开始制作订单: {order_id}")
+    
+    return {"success": True, "message": "已开始制作", "order": order}
+
+
+@app.post("/api/merchant/orders/{order_id}/complete")
+async def complete_order(order_id: str):
+    """完成订单"""
+    order = next((o for o in orders_db if o.id == order_id), None)
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    
+    if order.status != OrderStatus.PREPARING:
+        raise HTTPException(status_code=400, detail="订单状态不正确，请先开始制作")
+    
+    order.status = OrderStatus.COMPLETED
+    order.updated_at = datetime.now()
+    
+    print(f"✅ 订单已完成: {order_id}")
+    
+    return {"success": True, "message": "订单已完成", "order": order}
+
+
+@app.post("/api/merchant/orders/{order_id}/cancel")
+async def cancel_order(order_id: str):
+    """取消订单"""
+    order = next((o for o in orders_db if o.id == order_id), None)
+    if not order:
+        raise HTTPException(status_code=404, detail="订单不存在")
+    
+    if order.status == OrderStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="订单已完成，无法取消")
+    
+    order.status = OrderStatus.CANCELLED
+    order.updated_at = datetime.now()
+    
+    print(f"❌ 订单已取消: {order_id}")
+    
+    return {"success": True, "message": "订单已取消", "order": order}
 
 
 @app.post("/api/merchant/dishes", response_model=Dish)

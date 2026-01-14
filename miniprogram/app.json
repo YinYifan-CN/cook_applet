@@ -2,14 +2,12 @@
   "pages": [
     "pages/index/index",
     "pages/cart/cart",
-    "pages/order/order",
-    "pages/merchant/merchant",
-    "pages/add-dish/add-dish"
+    "pages/order/order"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ff6b9d",
-    "navigationBarTitleText": "香香厨房",
+    "navigationBarTitleText": "香香厨房-用户端",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {
@@ -20,19 +18,21 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "点餐"
+        "text": "点餐",
+        "iconPath": "images/dish.png",
+        "selectedIconPath": "images/dish-active.png"
       },
       {
         "pagePath": "pages/cart/cart",
-        "text": "购物车"
+        "text": "购物车",
+        "iconPath": "images/cart.png",
+        "selectedIconPath": "images/cart-active.png"
       },
       {
         "pagePath": "pages/order/order",
-        "text": "订单"
-      },
-      {
-        "pagePath": "pages/merchant/merchant",
-        "text": "商家"
+        "text": "我的订单",
+        "iconPath": "images/order.png",
+        "selectedIconPath": "images/order-active.png"
       }
     ]
   },

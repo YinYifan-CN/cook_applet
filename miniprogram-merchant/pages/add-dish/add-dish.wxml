@@ -1,0 +1,56 @@
+<!--pages/add-dish/add-dish.wxml-->
+<view class="container">
+  <view class="form-section">
+    <view class="form-title">{{isEdit ? '编辑菜品' : '添加新菜品'}}</view>
+
+    <view class="form-group">
+      <view class="form-label">菜品名称 *</view>
+      <input class="form-input" 
+             placeholder="请输入菜品名称" 
+             value="{{name}}" 
+             bindinput="onNameInput" />
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">价格（元）*</view>
+      <input class="form-input" 
+             type="digit" 
+             placeholder="请输入价格" 
+             value="{{price}}" 
+             bindinput="onPriceInput" />
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">菜品描述 *</view>
+      <textarea class="form-textarea" 
+                placeholder="请输入菜品描述" 
+                value="{{description}}" 
+                bindinput="onDescInput"
+                maxlength="200"
+                show-confirm-bar="{{false}}" />
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">制作说明（可选）</view>
+      <view class="form-tip">填写制作步骤、食材、调料等信息，方便厨师查看</view>
+      <textarea class="form-textarea cooking-textarea" 
+                placeholder="食材：&#10;- 食材1&#10;- 食材2&#10;&#10;调料：&#10;- 调料1&#10;- 调料2&#10;&#10;步骤：&#10;1. 第一步&#10;2. 第二步"
+                value="{{cookingInstructions}}" 
+                bindinput="onCookingInput"
+                maxlength="1000"
+                show-confirm-bar="{{false}}" />
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">是否上架</view>
+      <switch checked="{{isAvailable}}" bindchange="onAvailableChange" color="#667eea" />
+    </view>
+
+    <view class="form-actions">
+      <button class="btn-cancel" bindtap="cancel">取消</button>
+      <button class="btn-submit" bindtap="submitDish">
+        {{isEdit ? '保存修改' : '确认添加'}}
+      </button>
+    </view>
+  </view>
+</view>

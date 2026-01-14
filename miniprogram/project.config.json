@@ -54,8 +54,8 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "2.19.4",
-  "appid": "wx58829fb5420d890a",
+  "libVersion": "3.13.2",
+  "appid": "wx9554fd3b5ba9b4e3",
   "projectname": "香香厨房",
   "isGameTourist": false,
   "condition": {

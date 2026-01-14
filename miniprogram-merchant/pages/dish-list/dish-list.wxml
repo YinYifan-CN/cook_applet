@@ -1,0 +1,46 @@
+<!--pages/dish-list/dish-list.wxml-->
+<view class="container">
+  <!-- 添加按钮 -->
+  <view class="add-button-section">
+    <button class="btn-add-dish" bindtap="addDish">➕ 添加新菜品</button>
+  </view>
+
+  <!-- 菜品列表 -->
+  <view class="dish-list">
+    <view class="dish-card" wx:for="{{dishes}}" wx:key="id">
+      <view class="dish-header">
+        <view class="dish-info">
+          <view class="dish-name">{{item.name}}</view>
+          <view class="dish-description">{{item.description}}</view>
+          <view class="dish-price">¥{{item.price.toFixed(2)}}</view>
+        </view>
+        <view class="dish-status">
+          <view class="status-badge {{item.is_available ? 'available' : 'unavailable'}}">
+            {{item.is_available ? '✅ 在售' : '❌ 下架'}}
+          </view>
+        </view>
+      </view>
+
+      <!-- 制作说明 -->
+      <view class="dish-instructions" wx:if="{{item.cooking_instructions && item.cooking_instructions !== '暂无制作说明'}}">
+        <view class="instructions-title">📖 制作说明：</view>
+        <view class="instructions-content">{{item.cooking_instructions}}</view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="dish-actions">
+        <button class="action-btn btn-toggle" bindtap="toggleAvailable" data-dish="{{item}}">
+          {{item.is_available ? '下架' : '上架'}}
+        </button>
+        <button class="action-btn btn-edit" bindtap="editDish" data-dish="{{item}}">✏️ 编辑</button>
+        <button class="action-btn btn-delete" bindtap="deleteDish" data-id="{{item.id}}" data-name="{{item.name}}">🗑️ 删除</button>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{dishes.length === 0}}">
+      <view class="empty-icon">🍽️</view>
+      <view class="empty-text">暂无菜品，点击上方按钮添加</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,35 @@
+{
+  "pages": [
+    "pages/merchant/merchant",
+    "pages/add-dish/add-dish",
+    "pages/dish-list/dish-list"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#667eea",
+    "navigationBarTitleText": "香香厨房-商家端",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#667eea",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/merchant/merchant",
+        "text": "订单管理",
+        "iconPath": "images/order.png",
+        "selectedIconPath": "images/order-active.png"
+      },
+      {
+        "pagePath": "pages/dish-list/dish-list",
+        "text": "菜品管理",
+        "iconPath": "images/dish.png",
+        "selectedIconPath": "images/dish-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

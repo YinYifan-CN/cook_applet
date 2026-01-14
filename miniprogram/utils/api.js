@@ -2,11 +2,12 @@
 const app = getApp()
 
 // API基础地址 - 根据需要切换
-const USE_LOCAL = true  // true=开发工具用localhost, false=真机预览用局域网IP
+// 开发阶段：手机和电脑必须连接同一个WiFi！
+const USE_LOCAL = false  // true=开发工具用localhost, false=真机预览用局域网IP
 
 const API_BASE = USE_LOCAL 
-  ? 'http://localhost:8000'  // 开发工具
-  : 'http://192.168.80.138:8000'  // 真机预览（手机需连接同一WiFi）
+  ? 'http://localhost:8000'  // 开发工具（仅在PC微信开发者工具中可用）
+  : 'http://192.168.70.209:8000'  // 真机预览（手机需连接同一WiFi）
 
 console.log('当前API地址:', API_BASE)
 

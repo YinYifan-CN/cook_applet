@@ -2,7 +2,7 @@
 const app = getApp()
 
 // API基础地址
-const API_BASE = 'http://192.168.70.209:8000'
+const API_BASE = 'http://72.11.140.254:8000'
 
 console.log('商家端API地址:', API_BASE)
 

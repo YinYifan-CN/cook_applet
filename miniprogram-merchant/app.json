@@ -7,7 +7,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#667eea",
-    "navigationBarTitleText": "香香厨房-商家端",
+    "navigationBarTitleText": "香香厨房-管理端",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {
@@ -18,7 +18,7 @@
     "list": [
       {
         "pagePath": "pages/merchant/merchant",
-        "text": "订单管理",
+        "text": "清单管理",
         "iconPath": "images/order.png",
         "selectedIconPath": "images/order-active.png"
       },

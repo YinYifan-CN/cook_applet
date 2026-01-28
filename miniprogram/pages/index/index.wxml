@@ -17,7 +17,7 @@
       </view>
       <view class="dish-actions">
         <button class="btn-add" bindtap="addToCart" data-dish="{{item}}">
-          + 加入购物车
+          ♥ 收藏
         </button>
       </view>
     </view>
@@ -29,19 +29,19 @@
     <view class="empty-state-text">暂无菜品</view>
   </view>
 
-  <!-- 购物车浮动按钮 -->
+  <!-- 收藏浮动按钮 -->
   <view class="cart-float" wx:if="{{cart.length > 0}}" bindtap="showCart">
     <view class="cart-badge">{{getCartCount()}}</view>
-    <view class="cart-icon">🛒</view>
+    <view class="cart-icon">♥</view>
     <view class="cart-total">¥{{getCartTotal()}}</view>
   </view>
 
-  <!-- 购物车弹窗 -->
+  <!-- 收藏弹窗 -->
   <view class="cart-popup" wx:if="{{showCartPopup}}">
     <view class="cart-mask" bindtap="hideCart"></view>
     <view class="cart-content">
       <view class="cart-header">
-        <text>购物车</text>
+        <text>我的收藏</text>
         <text bindtap="hideCart">✕</text>
       </view>
       <scroll-view class="cart-items" scroll-y>
@@ -56,8 +56,8 @@
         </view>
       </scroll-view>
       <view class="cart-footer">
-        <view class="footer-total">总计：¥{{getCartTotal()}}</view>
-        <button class="btn-checkout" bindtap="goToCheckout">去结算</button>
+        <view class="footer-total">参考价：¥{{getCartTotal()}}</view>
+        <button class="btn-checkout" bindtap="goToCheckout">查看详情</button>
       </view>
     </view>
   </view>

@@ -1,4 +1,4 @@
-// pages/order/order.js - 订单列表页
+// pages/order/order.js - 清单列表页
 const api = require('../../utils/api.js')
 const app = getApp()
 
@@ -39,7 +39,7 @@ Page({
     })
   },
 
-  // 加载订单列表
+  // 加载清单列表
   async loadOrders() {
     try {
       const userId = app.getUserId()
@@ -67,7 +67,7 @@ Page({
         filteredOrders: orders
       })
     } catch (err) {
-      console.error('加载订单失败:', err)
+      console.error('加载清单失败:', err)
       this.setData({ orders: [] })
       wx.showToast({
         title: '加载失败',
@@ -76,7 +76,7 @@ Page({
     }
   },
 
-  // 筛选订单
+  // 筛选清单
   filterOrders(e) {
     const status = e.currentTarget.dataset.status
     const filteredOrders = status === 'all' 
@@ -89,7 +89,7 @@ Page({
     })
   },
 
-  // 查看订单详情
+  // 查看清单详情
   viewOrderDetail(e) {
     const order = e.currentTarget.dataset.order
     const items = order.items.map(item => 
@@ -97,8 +97,8 @@ Page({
     ).join('\n')
     
     wx.showModal({
-      title: `订单详情 - ${order.id}`,
-      content: `状态：${this.data.statusMap[order.status]}\n\n${items}\n\n总计：¥${order.total_amount}\n\n${order.note ? '备注：' + order.note : ''}`,
+      title: `清单详情 - ${order.id}`,
+      content: `状态：${this.data.statusMap[order.status]}\n\n${items}\n\n参考价：¥${order.total_amount}\n\n${order.note ? '备注：' + order.note : ''}`,
       showCancel: false
     })
   },

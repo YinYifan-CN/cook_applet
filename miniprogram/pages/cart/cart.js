@@ -71,11 +71,11 @@ Page({
     })
   },
 
-  // 清空购物车
+  // 清空收藏
   clearCart() {
     wx.showModal({
       title: '提示',
-      content: '确定要清空购物车吗？',
+      content: '确定要清空收藏吗？',
       success: (res) => {
         if (res.confirm) {
           this.setData({ cart: [] })
@@ -89,7 +89,7 @@ Page({
     })
   },
 
-  // 去点餐页
+  // 去浏览页
   goToIndex() {
     wx.switchTab({
       url: '/pages/index/index'
@@ -103,11 +103,11 @@ Page({
     }, 0).toFixed(2)
   },
 
-  // 提交订单
+  // 提交清单
   async submitOrder() {
     if (this.data.cart.length === 0) {
       wx.showToast({
-        title: '购物车是空的',
+        title: '收藏是空的',
         icon: 'none'
       })
       return
@@ -125,17 +125,18 @@ Page({
       const order = await api.createOrder(orderData)
       wx.hideLoading()
 
-      // 清空购物车
+      // 清空收藏
       this.setData({ cart: [], note: '' })
       app.updateCart([])
 
-      // 提示成功
+      // 免费提示
       wx.showModal({
-        title: '下单成功',
-        content: `订单号：${order.id}\n总金额：¥${order.total_amount}`,
+        title: '💝 特别优惠',
+        content: `由于爱你，本餐免费！\n\n清单编号：${order.id}\n参考价值：¥${order.total_amount}`,
         showCancel: false,
+        confirmText: '太好了',
         success: () => {
-          // 跳转到订单页
+          // 跳转到清单页
           wx.switchTab({
             url: '/pages/order/order'
           })

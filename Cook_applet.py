@@ -44,10 +44,10 @@ async def lifespan(app: FastAPI):
     
     print("点菜系统API启动成功！")
     print("=" * 50)
-    print("📱 用户端页面: https://yxcmqx.top:8000/demo.html")
-    print("🏪 商家端页面: https://yxcmqx.top:8000/merchant.html")
-    print("📖 API文档: https://yxcmqx.top:8000/docs")
-    print("🔌 WebSocket: wss://yxcmqx.top:8000/ws/merchant")
+    print("📱 用户端页面: http://yxcmqx.top:8000/demo.html")
+    print("🏪 商家端页面: http://yxcmqx.top:8000/merchant.html")
+    print("📖 API文档: http://yxcmqx.top:8000/docs")
+    print("🔌 WebSocket: ws://yxcmqx.top:8000/ws/merchant")
     print("=" * 50)
     
     yield

@@ -1,3 +1,11 @@
+'''
+Author: Dylanxcyin
+Date: 2026-01-14 09:25:15
+LastEditors: Dylanxcyin
+LastEditTime: 2026-02-02 16:59:06
+Description: 文件用途描述
+FilePath: \cook_applet\config.py
+'''
 """
 配置文件
 """
@@ -9,10 +17,5 @@ DATABASE_URL = "sqlite:///./cook_applet.db"
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 8000
 
-# 微信小程序配置
-WECHAT_APP_ID = "your_app_id"
-WECHAT_APP_SECRET = "your_app_secret"
-
-# 支付配置
-WECHAT_PAY_MCH_ID = "your_mch_id"
-WECHAT_PAY_KEY = "your_pay_key"
+# 替换为你的服务器域名或IP
+BASE_URL = "http://72.11.140.254:8000"

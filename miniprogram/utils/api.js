@@ -2,7 +2,7 @@
 const app = getApp()
 
 // API基础地址 - 服务器地址
-const API_BASE = 'http://72.11.140.254:8000'
+const API_BASE = 'https://yxcmqx.top:8000'
 
 console.log('当前API地址:', API_BASE)
 

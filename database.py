@@ -1,5 +1,5 @@
 """
-数据库模型定义（使用SQLAlchemy）
+数据库模型定义（使用SQLAlchemy 1.4）
 """
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, Text, Enum as SQLEnum
 from sqlalchemy.ext.declarative import declarative_base

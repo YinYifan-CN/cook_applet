@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from dataclasses import dataclass, asdict
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -82,19 +82,21 @@ class OrderStatus(str, Enum):
     CANCELLED = "cancelled"  # 已取消
 
 
-class Dish(BaseModel):
+@dataclass
+class Dish:
     """菜品模型"""
     id: int
     name: str
     price: float
     description: str
+    category: str
     image_url: Optional[str] = None
     cooking_instructions: Optional[str] = None  # 制作说明
-    category: str
     is_available: bool = True
 
 
-class OrderItem(BaseModel):
+@dataclass
+class OrderItem:
     """订单项模型"""
     dish_id: int
     dish_name: str
@@ -102,7 +104,8 @@ class OrderItem(BaseModel):
     price: float
 
 
-class Order(BaseModel):
+@dataclass
+class Order:
     """订单模型"""
     id: str
     user_id: str
@@ -110,12 +113,13 @@ class Order(BaseModel):
     total_amount: float
     status: OrderStatus
     items: List[OrderItem]
-    note: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    note: Optional[str] = None
 
 
-class CreateOrderRequest(BaseModel):
+@dataclass
+class CreateOrderRequest:
     """创建订单请求"""
     user_id: str
     user_name: str
@@ -123,7 +127,8 @@ class CreateOrderRequest(BaseModel):
     note: Optional[str] = None
 
 
-class PaymentRequest(BaseModel):
+@dataclass
+class PaymentRequest:
     """支付请求"""
     order_id: str
     payment_method: str  # "wechat"
@@ -161,6 +166,38 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+# ==================== 辅助函数 ====================
+
+def serialize_datetime(obj):
+    """JSON序列化时处理datetime对象"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+def dataclass_to_dict(obj):
+    """将dataclass对象转换为字典，处理datetime等特殊类型"""
+    if hasattr(obj, '__dataclass_fields__'):
+        result = asdict(obj)
+        # 递归处理字典中的datetime对象
+        return _convert_datetime_in_dict(result)
+    elif isinstance(obj, list):
+        return [dataclass_to_dict(item) for item in obj]
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    else:
+        return obj
+
+def _convert_datetime_in_dict(data):
+    """递归转换字典中的datetime对象"""
+    if isinstance(data, dict):
+        return {key: _convert_datetime_in_dict(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [_convert_datetime_in_dict(item) for item in data]
+    elif isinstance(data, datetime):
+        return data.isoformat()
+    else:
+        return data
+
 
 # ==================== 静态文件服务 ====================
 
@@ -191,19 +228,20 @@ async def root():
 
 # ==================== 用户端 API ====================
 
-@app.get("/api/user/dishes", response_model=List[Dish])
+@app.get("/api/user/dishes")
 async def get_dishes():
     """获取所有可用菜品"""
-    return [dish for dish in dishes_db if dish.is_available]
+    available_dishes = [dish for dish in dishes_db if dish.is_available]
+    return [dataclass_to_dict(dish) for dish in available_dishes]
 
 
-@app.get("/api/user/dishes/{dish_id}", response_model=Dish)
+@app.get("/api/user/dishes/{dish_id}")
 async def get_dish(dish_id: int):
     """获取单个菜品详情"""
-    dish = next((d for d in dishes_db if d.id == dish_id), None)
+    dish = next((d for d in dishes_db if d.id == dish_id and d.is_available), None)
     if not dish:
         raise HTTPException(status_code=404, detail="菜品不存在")
-    return dish
+    return dataclass_to_dict(dish)
 
 
 @app.get("/api/user/categories")
@@ -213,14 +251,36 @@ async def get_categories():
     return {"categories": categories}
 
 
-@app.post("/api/user/orders", response_model=Order)
-async def create_order(request: CreateOrderRequest):
+@app.post("/api/user/orders")
+async def create_order(request_data: dict):
     """创建订单"""
     global order_id_counter
     from utils import generate_order_number
     
+    # 验证必需字段
+    required_fields = ['user_id', 'user_name', 'items']
+    for field in required_fields:
+        if field not in request_data:
+            raise HTTPException(status_code=400, detail=f"缺少必需字段: {field}")
+    
+    # 验证items是列表且不为空
+    if not isinstance(request_data['items'], list) or not request_data['items']:
+        raise HTTPException(status_code=400, detail="items必须是非空列表")
+    
+    # 创建 OrderItem 对象
+    items = []
+    for item_data in request_data['items']:
+        if not all(key in item_data for key in ['dish_id', 'dish_name', 'quantity', 'price']):
+            raise HTTPException(status_code=400, detail="订单项数据不完整")
+        items.append(OrderItem(
+            dish_id=item_data['dish_id'],
+            dish_name=item_data['dish_name'],
+            quantity=item_data['quantity'],
+            price=item_data['price']
+        ))
+    
     # 计算总价
-    total_amount = sum(item.price * item.quantity for item in request.items)
+    total_amount = sum(item.price * item.quantity for item in items)
     
     # 生成订单号
     order_id = generate_order_number()
@@ -228,14 +288,14 @@ async def create_order(request: CreateOrderRequest):
     # 创建订单
     order = Order(
         id=order_id,
-        user_id=request.user_id,
-        user_name=request.user_name,
+        user_id=request_data['user_id'],
+        user_name=request_data['user_name'],
         total_amount=total_amount,
         status=OrderStatus.PENDING,
-        items=request.items,
-        note=request.note,
+        items=items,
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
+        note=request_data.get('note')
     )
     
     orders_db.append(order)
@@ -254,13 +314,19 @@ async def create_order(request: CreateOrderRequest):
     
     print(f"📦 新订单创建: {order.id}, 通知了 {len(manager.active_connections)} 个WebSocket连接")
     
-    return order
+    return dataclass_to_dict(order)
 
 
 @app.post("/api/user/payment")
-async def process_payment(request: PaymentRequest):
+async def process_payment(request_data: dict):
     """处理支付（示例实现）"""
-    order = next((o for o in orders_db if o.id == request.order_id), None)
+    # 验证必需字段
+    required_fields = ['order_id', 'payment_method', 'amount']
+    for field in required_fields:
+        if field not in request_data:
+            raise HTTPException(status_code=400, detail=f"缺少必需字段: {field}")
+    
+    order = next((o for o in orders_db if o.id == request_data['order_id']), None)
     if not order:
         raise HTTPException(status_code=404, detail="订单不存在")
     
@@ -287,8 +353,9 @@ async def get_user_orders(user_id: str):
 async def get_all_orders(status: Optional[str] = None):
     """获取所有订单（可按状态筛选）"""
     if status:
-        return [o for o in orders_db if o.status == status]
-    return orders_db
+        filtered_orders = [o for o in orders_db if o.status == status]
+        return [dataclass_to_dict(order) for order in filtered_orders]
+    return [dataclass_to_dict(order) for order in orders_db]
 
 
 @app.get("/api/merchant/orders/{order_id}")
@@ -299,11 +366,11 @@ async def get_order_detail(order_id: str):
         raise HTTPException(status_code=404, detail="订单不存在")
     
     # 为每个订单项添加制作说明
-    order_dict = order.dict()
+    order_dict = asdict(order)
     enhanced_items = []
     for item in order.items:
         dish = next((d for d in dishes_db if d.id == item.dish_id), None)
-        item_dict = item.dict()
+        item_dict = asdict(item)
         if dish:
             item_dict["cooking_instructions"] = dish.cooking_instructions
             item_dict["description"] = dish.description
@@ -313,23 +380,28 @@ async def get_order_detail(order_id: str):
     return order_dict
 
 
-class UpdateOrderStatusRequest(BaseModel):
+@dataclass
+class UpdateOrderStatusRequest:
     """更新订单状态请求"""
     status: str
 
 @app.put("/api/merchant/orders/{order_id}")
-async def update_order_status(order_id: str, request: UpdateOrderStatusRequest):
+async def update_order_status(order_id: str, request_data: dict):
     """更新订单状态"""
+    # 验证必需字段
+    if 'status' not in request_data:
+        raise HTTPException(status_code=400, detail="缺少必需字段: status")
+    
     order = next((o for o in orders_db if o.id == order_id), None)
     if not order:
         raise HTTPException(status_code=404, detail="订单不存在")
     
-    order.status = request.status
+    order.status = request_data['status']
     order.updated_at = datetime.now()
     
-    print(f"✅ 订单 {order_id} 状态更新为: {request.status}")
+    print(f"✅ 订单 {order_id} 状态更新为: {request_data['status']}")
     
-    return {"success": True, "message": "状态更新成功", "order": order}
+    return {"success": True, "message": "状态更新成功", "order": dataclass_to_dict(order)}
 
 
 @app.post("/api/merchant/orders/{order_id}/accept")
@@ -347,7 +419,7 @@ async def accept_order(order_id: str):
     
     print(f"✅ 商家已接单: {order_id}")
     
-    return {"success": True, "message": "接单成功", "order": order}
+    return {"success": True, "message": "接单成功", "order": dataclass_to_dict(order)}
 
 
 @app.post("/api/merchant/orders/{order_id}/start")
@@ -365,7 +437,7 @@ async def start_preparing(order_id: str):
     
     print(f"🍳 开始制作订单: {order_id}")
     
-    return {"success": True, "message": "已开始制作", "order": order}
+    return {"success": True, "message": "开始制作", "order": dataclass_to_dict(order)}
 
 
 @app.post("/api/merchant/orders/{order_id}/complete")
@@ -383,7 +455,7 @@ async def complete_order(order_id: str):
     
     print(f"✅ 订单已完成: {order_id}")
     
-    return {"success": True, "message": "订单已完成", "order": order}
+    return {"success": True, "message": "订单已完成", "order": dataclass_to_dict(order)}
 
 
 @app.post("/api/merchant/orders/{order_id}/cancel")
@@ -401,24 +473,30 @@ async def cancel_order(order_id: str):
     
     print(f"❌ 订单已取消: {order_id}")
     
-    return {"success": True, "message": "订单已取消", "order": order}
+    return {"success": True, "message": "订单已取消", "order": dataclass_to_dict(order)}
 
 
-@app.post("/api/merchant/dishes", response_model=Dish)
-async def add_dish(dish: Dish):
+@app.post("/api/merchant/dishes")
+async def add_dish(dish_data: dict):
     """添加新菜品"""
+    # 验证必需字段
+    required_fields = ['name', 'category', 'price', 'description']
+    for field in required_fields:
+        if field not in dish_data:
+            raise HTTPException(status_code=400, detail=f"缺少必需字段: {field}")
+    
     from database import SessionLocal, DishModel
     db = SessionLocal()
     try:
         # 创建数据库记录
         db_dish = DishModel(
-            name=dish.name,
-            category=dish.category,
-            price=dish.price,
-            description=dish.description,
-            cooking_instructions=dish.cooking_instructions,
-            is_available=dish.is_available,
-            image_url=dish.image_url
+            name=dish_data['name'],
+            category=dish_data['category'],
+            price=dish_data['price'],
+            description=dish_data['description'],
+            cooking_instructions=dish_data.get('cooking_instructions'),
+            is_available=dish_data.get('is_available', True),
+            image_url=dish_data.get('image_url')
         )
         db.add(db_dish)
         db.commit()
@@ -438,7 +516,7 @@ async def add_dish(dish: Dish):
         dishes_db.append(new_dish)
         
         print(f"✅ 新菜品已添加: {new_dish.name} (ID: {new_dish.id})")
-        return new_dish
+        return dataclass_to_dict(new_dish)
     except Exception as e:
         db.rollback()
         print(f"❌ 添加菜品失败: {e}")
@@ -447,9 +525,14 @@ async def add_dish(dish: Dish):
         db.close()
 
 
-@app.put("/api/merchant/dishes/{dish_id}", response_model=Dish)
-async def update_dish(dish_id: int, updated_dish: Dish):
+@app.put("/api/merchant/dishes/{dish_id}")
+async def update_dish(dish_id: int, dish_data: dict):
     """更新菜品信息"""
+    # 验证必需字段
+    required_fields = ['name', 'category', 'price', 'description']
+    for field in required_fields:
+        if field not in dish_data:
+            raise HTTPException(status_code=400, detail=f"缺少必需字段: {field}")
     from database import SessionLocal, DishModel
     db = SessionLocal()
     try:
@@ -459,16 +542,28 @@ async def update_dish(dish_id: int, updated_dish: Dish):
             raise HTTPException(status_code=404, detail="菜品不存在")
         
         # 更新数据库
-        db_dish.name = updated_dish.name
-        db_dish.category = updated_dish.category
-        db_dish.price = updated_dish.price
-        db_dish.description = updated_dish.description
-        db_dish.cooking_instructions = updated_dish.cooking_instructions
-        db_dish.is_available = updated_dish.is_available
-        db_dish.image_url = updated_dish.image_url
+        db_dish.name = dish_data['name']
+        db_dish.category = dish_data['category']
+        db_dish.price = dish_data['price']
+        db_dish.description = dish_data['description']
+        db_dish.cooking_instructions = dish_data.get('cooking_instructions')
+        db_dish.is_available = dish_data.get('is_available', True)
+        db_dish.image_url = dish_data.get('image_url')
         
         db.commit()
         db.refresh(db_dish)
+        
+        # 创建更新后的菜品对象
+        updated_dish = Dish(
+            id=db_dish.id,
+            name=db_dish.name,
+            category=db_dish.category,
+            price=db_dish.price,
+            description=db_dish.description,
+            cooking_instructions=db_dish.cooking_instructions,
+            is_available=db_dish.is_available,
+            image_url=db_dish.image_url
+        )
         
         # 更新内存中的数据
         index = next((i for i, d in enumerate(dishes_db) if d.id == dish_id), None)
@@ -476,7 +571,7 @@ async def update_dish(dish_id: int, updated_dish: Dish):
             dishes_db[index] = updated_dish
         
         print(f"✅ 菜品已更新: {updated_dish.name} (ID: {dish_id})")
-        return updated_dish
+        return dataclass_to_dict(updated_dish)
     except HTTPException:
         raise
     except Exception as e:

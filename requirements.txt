@@ -1,7 +1,6 @@
-fastapi==0.104.1
-uvicorn==0.24.0
-sqlalchemy==1.4.53
+fastapi==0.95.0
+uvicorn==0.20.0
+sqlalchemy==1.4.46
 PyPDF2==3.0.1
-python-multipart==0.0.6
-websockets==12.0
-greenlet==3.0.3
+python-multipart==0.0.5
+websockets==10.4
